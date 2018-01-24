@@ -1,5 +1,6 @@
 package io.intelia.checkableviewgroup;
 
+import android.os.Build;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Checkable;
@@ -29,12 +30,19 @@ public class CheckableViewGroupImpl<T extends Checkable> implements CheckableVie
 
     public void init() {
         mChildOnCheckedChangeListener = new CheckedStateTracker();
+
     }
 
     public void addCheckableView(T child, int index, ViewGroup.LayoutParams params) {
 
         final View checked = (View) child;
         checked.setOnClickListener(this);
+        checked.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            public void onFocusChange(View v, boolean hasFocus) {
+                if(hasFocus)
+                    v.performClick();
+            }
+        });
         if (((Checkable) checked).isChecked()) {
             mProtectFromCheckedChange = true;
             if (mCheckedId != -1) {
@@ -82,7 +90,9 @@ public class CheckableViewGroupImpl<T extends Checkable> implements CheckableVie
 
     private void setCheckedStateForView(int viewId, boolean checked) {
         View checkedView = mViewGroup.findViewById(viewId);
-        ((Checkable) checkedView).setChecked(checked);
+        if (checkedView != null)
+            ((Checkable) checkedView).setChecked(checked);
+        else throw new NullPointerException("It is manadatory for a child to have an id");
     }
 
     public void onClick(View v) {
@@ -93,11 +103,17 @@ public class CheckableViewGroupImpl<T extends Checkable> implements CheckableVie
         mChildOnCheckedChangeListener.onCheckedChanged(v, ((Checkable) v).isChecked());
     }
 
+
+
+
     private class CheckedStateTracker implements OnCheckedChangeTrackListener {
         @Override
         public void onCheckedChanged(View v, boolean isChecked) {
             // prevents from infinite recursion
             if (mProtectFromCheckedChange) {
+                return;
+            }
+            if((v.getId() == mCheckedId)) {
                 return;
             }
 
