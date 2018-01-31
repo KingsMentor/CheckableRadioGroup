@@ -55,6 +55,8 @@ public class CheckableViewGroupImpl<T extends Checkable> implements CheckableVie
 
     public void setCheckedId(int id) {
         if (id != -1 && (id == mCheckedId)) {
+            setCheckedStateForView(id, true);
+            mOnCheckedChangeListener.onCheckedChanged(mViewGroup, mCheckedId);
             return;
         }
 
